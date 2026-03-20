@@ -1,0 +1,93 @@
+<%- include('partials/header') %>
+
+<div class="page-container">
+  <h1 class="page-heading">Your Cart</h1>
+  <p class="page-sub">Review your order before checkout</p>
+  <div id="cart-content"></div>
+</div>
+
+<script>
+  function getCart() {
+    return JSON.parse(localStorage.getItem('cart') || '[]');
+  }
+
+  function saveCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
+    renderCart();
+  }
+
+  function changeQty(id, delta) {
+    const cart = getCart();
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+    item.quantity += delta;
+    saveCart(item.quantity <= 0 ? cart.filter(i => i.id !== id) : cart);
+  }
+
+  function removeItem(id) {
+    saveCart(getCart().filter(i => i.id !== id));
+  }
+
+  function renderCart() {
+    const cart = getCart();
+    const el = document.getElementById('cart-content');
+
+    if (cart.length === 0) {
+      el.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🛒</div>
+          <p style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem; color:#444;">Your cart is empty</p>
+          <p style="margin-bottom:1.5rem;">Add some delicious items from the menu!</p>
+          <a href="/" class="btn btn-primary btn-lg">Browse Menu</a>
+        </div>`;
+      return;
+    }
+
+    const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    const rows = cart.map(item => `
+      <tr>
+        <td><strong>${item.name}</strong></td>
+        <td>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+            <span class="qty-value">${item.quantity}</span>
+            <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+          </div>
+        </td>
+        <td>$${Number(item.price).toFixed(2)}</td>
+        <td><strong>$${(item.price * item.quantity).toFixed(2)}</strong></td>
+        <td><button class="btn btn-danger" onclick="removeItem(${item.id})">Remove</button></td>
+      </tr>
+    `).join('');
+
+    el.innerHTML = `
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>Item</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="cart-summary">
+        <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+        <div class="summary-row"><span>Delivery</span><span style="color:#22c55e;">Free</span></div>
+        <div class="summary-row summary-total">
+          <span>Total</span><span>$${subtotal.toFixed(2)}</span>
+        </div>
+        <div style="margin-top:1.5rem; display:flex; gap:1rem; flex-wrap:wrap;">
+          <a href="/" class="btn btn-outline btn-lg">← Continue Shopping</a>
+          <a href="/checkout" class="btn btn-primary btn-lg" style="flex:1; text-align:center;">
+            Proceed to Checkout →
+          </a>
+        </div>
+      </div>`;
+  }
+
+  renderCart();
+</script>
+
+<%- include('partials/footer') %>

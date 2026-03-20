@@ -1,0 +1,185 @@
+<%- include('partials/header') %>
+<script src="https://www.paypal.com/sdk/js?client-id=<%= clientId %>&currency=USD"></script>
+
+<div class="page-container">
+  <h1 class="page-heading">Checkout</h1>
+  <p class="page-sub">Fill in your details and pay securely with PayPal</p>
+
+  <div id="empty-redirect"></div>
+
+  <div class="checkout-layout" id="checkout-layout" style="display:none">
+
+    <!-- ── Left: Order summary ─────────────────────────────────────────── -->
+    <div class="order-review">
+      <h2 style="font-family:'Playfair Display',serif; font-size:1.2rem; margin-bottom:1.2rem;">
+        Order Summary
+      </h2>
+      <div id="order-items"></div>
+      <div class="summary-row" style="margin-top:0.6rem;">
+        <span>Delivery</span>
+        <span style="color:#22c55e; font-weight:600;">Free</span>
+      </div>
+      <div class="summary-row summary-total">
+        <span>Total</span>
+        <span id="order-total">$0.00</span>
+      </div>
+    </div>
+
+    <!-- ── Right: Customer form + PayPal ──────────────────────────────── -->
+    <div>
+
+      <!-- Customer details -->
+      <div class="customer-form">
+        <h3>Your Details</h3>
+
+        <div class="form-group">
+          <label class="form-label" for="customer-name">Full Name</label>
+          <input
+            class="form-input"
+            type="text"
+            id="customer-name"
+            placeholder="e.g. Johann Smith"
+            autocomplete="name"
+          />
+          <div class="form-error" id="name-error">Please enter your full name.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="customer-phone">Phone Number</label>
+          <input
+            class="form-input"
+            type="tel"
+            id="customer-phone"
+            placeholder="e.g. +66 81 234 5678"
+            autocomplete="tel"
+          />
+          <div class="form-error" id="phone-error">Please enter a valid phone number.</div>
+        </div>
+      </div>
+
+      <!-- PayPal button -->
+      <div class="payment-box">
+        <h3>Secure Payment</h3>
+
+        <div class="paypal-wrapper" id="paypal-wrapper">
+          <!-- Blocker overlay — hidden once form is valid -->
+          <div class="paypal-blocker" id="paypal-blocker">
+            🔒 Fill in your details above
+          </div>
+          <div id="paypal-button-container"></div>
+        </div>
+
+        <p id="pay-error" style="color:#ef4444; font-size:0.82rem; margin-top:0.8rem; display:none;"></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+  if (cart.length === 0) {
+    document.getElementById('empty-redirect').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🛒</div>
+        <p style="font-size:1.1rem;font-weight:600;color:#444;margin-bottom:.5rem;">Your cart is empty</p>
+        <p style="margin-bottom:1.5rem;">Add some items before checking out.</p>
+        <a href="/" class="btn btn-primary btn-lg">Browse Menu</a>
+      </div>`;
+  } else {
+    document.getElementById('checkout-layout').style.display = 'grid';
+
+    // Render order summary
+    const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    document.getElementById('order-items').innerHTML = cart.map(item => `
+      <div class="order-item">
+        <span>${item.name} <span style="color:#aaa">× ${item.quantity}</span></span>
+        <span style="font-weight:700;">$${(item.price * item.quantity).toFixed(2)}</span>
+      </div>`).join('');
+    document.getElementById('order-total').textContent = `$${subtotal.toFixed(2)}`;
+
+    // ── Form validation ───────────────────────────────────────────────────────
+    const nameInput  = document.getElementById('customer-name');
+    const phoneInput = document.getElementById('customer-phone');
+    const blocker    = document.getElementById('paypal-blocker');
+
+    function isFormValid() {
+      return nameInput.value.trim().length >= 2 &&
+             phoneInput.value.trim().length >= 6;
+    }
+
+    function updateBlocker() {
+      blocker.style.display = isFormValid() ? 'none' : 'flex';
+    }
+
+    nameInput.addEventListener('input', () => {
+      nameInput.classList.toggle('error', nameInput.value.trim().length < 2 && nameInput.value.length > 0);
+      document.getElementById('name-error').classList.toggle('show', nameInput.value.trim().length < 2 && nameInput.value.length > 0);
+      updateBlocker();
+    });
+
+    phoneInput.addEventListener('input', () => {
+      const v = phoneInput.value.trim();
+      const invalid = v.length > 0 && v.length < 6;
+      phoneInput.classList.toggle('error', invalid);
+      document.getElementById('phone-error').classList.toggle('show', invalid);
+      updateBlocker();
+    });
+
+    // ── PayPal Buttons ────────────────────────────────────────────────────────
+    paypal.Buttons({
+
+      createOrder: async () => {
+        // Final validation before creating order
+        if (!isFormValid()) {
+          if (nameInput.value.trim().length < 2)  nameInput.classList.add('error');
+          if (phoneInput.value.trim().length < 6) phoneInput.classList.add('error');
+          throw new Error('Please fill in your details first.');
+        }
+
+        const res = await fetch('/api/paypal/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cart,
+            customerName:  nameInput.value.trim(),
+            customerPhone: phoneInput.value.trim(),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Create order failed');
+
+        sessionStorage.setItem('orderRef', data.ref);
+        return data.id;
+      },
+
+      onApprove: async (data) => {
+        const ref = sessionStorage.getItem('orderRef');
+        const res = await fetch('/api/paypal/capture-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderID: data.orderID, ref }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Capture failed');
+
+        localStorage.removeItem('cart');
+        sessionStorage.removeItem('orderRef');
+        window.location.href = `/success?ref=${result.ref}`;
+      },
+
+      onCancel: () => { window.location.href = '/cancel'; },
+
+      onError: (err) => {
+        console.error('[PayPal Error]', err);
+        const errEl = document.getElementById('pay-error');
+        errEl.textContent = 'Payment error. Please try again.';
+        errEl.style.display = 'block';
+      },
+
+    }).render('#paypal-button-container');
+  }
+</script>
+
+<%- include('partials/footer') %>

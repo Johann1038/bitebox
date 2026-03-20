@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BiteBox — Order Fresh</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<nav id="main-nav">
+  <a href="/" class="nav-logo">Bite<span>Box</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">Menu</a>
+    <a href="/cart" class="nav-link">My Order</a>
+    <a href="/cart" class="nav-cart">
+      🛒 Cart
+      <span class="cart-badge" id="cart-count">0</span>
+    </a>
+  </div>
+</nav>
+
+<script>
+  function updateCartBadge() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const total = cart.reduce((sum, i) => sum + i.quantity, 0);
+    document.getElementById('cart-count').textContent = total;
+  }
+  updateCartBadge();
+
+  // Add shadow to nav on scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 10);
+  });
+</script>

@@ -1,0 +1,295 @@
+<%- include('partials/header') %>
+
+<%
+  const categories = [...new Set(menu.map(i => i.category))];
+  const burgers = menu.filter(i => i.category === 'Burgers');
+  const pizzas  = menu.filter(i => i.category === 'Pizza');
+  const sides   = menu.filter(i => i.category === 'Sides & Drinks');
+
+  const badgeClass = {
+    'Best Seller': 'badge-orange',
+    "Chef's Pick": 'badge-gold',
+    'Spicy':       'badge-red',
+    'Popular':     'badge-orange',
+    'Fan Fave':    'badge-green',
+  };
+%>
+
+<!-- ══════════════════════════════════════════════════════ HERO ══ -->
+<section class="hero">
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      🔥 Now Open — Order Online
+    </div>
+    <h1 class="hero-title">
+      Food Worth<br>
+      <span class="highlight">Craving.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Hand-crafted burgers, stone-baked pizzas, and crispy sides — made fresh to order and paid securely with PayPal.
+    </p>
+    <div class="hero-actions">
+      <a href="#menu" class="btn btn-primary btn-lg">Explore Menu</a>
+      <a href="/cart" class="btn btn-outline-white btn-lg">View Cart</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">8+</div>
+      <div class="hero-stat-label">Menu Items</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">3</div>
+      <div class="hero-stat-label">Categories</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">⚡</div>
+      <div class="hero-stat-label">Fast Delivery</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ FEATURES ══ -->
+<section class="features">
+  <div class="features-inner">
+    <div class="feature-item">
+      <span class="feature-icon">🥩</span>
+      <div class="feature-text">
+        <strong>Fresh Daily</strong>
+        <span>Sourced every morning</span>
+      </div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🚀</span>
+      <div class="feature-text">
+        <strong>Fast Delivery</strong>
+        <span>30 min or less</span>
+      </div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">⭐</span>
+      <div class="feature-text">
+        <strong>5-Star Rated</strong>
+        <span>Loved by thousands</span>
+      </div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔒</span>
+      <div class="feature-text">
+        <strong>Secure Payment</strong>
+        <span>PayPal protected</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ CATEGORY NAV ══ -->
+<nav class="cat-nav" id="cat-nav">
+  <div class="cat-nav-inner">
+    <% categories.forEach((cat, i) => { %>
+      <div class="cat-tab <%= i === 0 ? 'active' : '' %>" data-target="<%= cat %>">
+        <%= cat === 'Burgers' ? '🍔 ' : cat === 'Pizza' ? '🍕 ' : '🍟 ' %><%= cat %>
+      </div>
+    <% }) %>
+  </div>
+</nav>
+
+<div id="menu">
+
+  <!-- ══════════════════════════════════════════════════ BURGERS ══ -->
+  <section class="menu-section" id="section-Burgers">
+    <div class="section-container">
+
+      <div class="section-eyebrow">Our Burgers</div>
+      <h2 class="section-title">Built for Burger Lovers</h2>
+      <p class="section-desc">
+        Premium beef patties, freshly baked buns — every burger made to order.
+      </p>
+
+      <div class="burger-grid">
+        <% burgers.forEach(item => { %>
+          <div class="burger-card">
+            <div class="burger-card-img-wrap">
+              <img src="<%= item.image %>" alt="<%= item.name %>" loading="lazy" />
+              <% if (item.badge) { %>
+                <div class="card-badge-pos">
+                  <span class="badge <%= badgeClass[item.badge] || 'badge-orange' %>"><%= item.badge %></span>
+                </div>
+              <% } %>
+            </div>
+            <div class="burger-card-body">
+              <div class="burger-card-name"><%= item.name %></div>
+              <div class="burger-card-desc"><%= item.description %></div>
+              <div class="burger-card-footer">
+                <span class="card-price">$<%= item.price.toFixed(2) %></span>
+                <button class="btn btn-primary" onclick="addToCart(JSON.parse(this.dataset.item))" data-item="<%= JSON.stringify(item) %>">
+                  + Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ PIZZA ══ -->
+  <section class="menu-section menu-section--dark" id="section-Pizza">
+    <div class="section-container">
+
+      <div class="section-eyebrow">Our Pizzas</div>
+      <h2 class="section-title section-title--light">Stone-Baked to Perfection</h2>
+      <p class="section-desc section-desc--light">
+        Thin, crispy crust with the finest toppings — baked at 450°C in our wood-fired oven.
+      </p>
+
+      <div class="pizza-grid">
+        <% pizzas.forEach(item => { %>
+          <div class="pizza-card">
+            <img src="<%= item.image %>" alt="<%= item.name %>" loading="lazy" />
+            <% if (item.badge) { %>
+              <div class="pizza-card-badge">
+                <span class="badge <%= badgeClass[item.badge] || 'badge-orange' %>"><%= item.badge %></span>
+              </div>
+            <% } %>
+            <div class="pizza-card-overlay">
+              <div class="pizza-card-name"><%= item.name %></div>
+              <div class="pizza-card-desc"><%= item.description %></div>
+              <div class="pizza-card-footer">
+                <span class="pizza-card-price">$<%= item.price.toFixed(2) %></span>
+                <button class="btn btn-primary" onclick="addToCart(JSON.parse(this.dataset.item))" data-item="<%= JSON.stringify(item) %>">
+                  + Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════ SIDES & DRINKS ══ -->
+  <section class="menu-section menu-section--alt" id="section-Sides & Drinks">
+    <div class="section-container">
+
+      <div class="section-eyebrow">Sides & Drinks</div>
+      <h2 class="section-title">Complete Your Meal</h2>
+      <p class="section-desc">
+        The perfect companions — crispy, saucy, and thirst-quenching.
+      </p>
+
+      <div class="sides-list">
+        <% sides.forEach(item => { %>
+          <div class="side-card">
+            <img class="side-card-img" src="<%= item.image %>" alt="<%= item.name %>" loading="lazy" />
+            <div class="side-card-info">
+              <div class="side-card-name">
+                <%= item.name %>
+                <% if (item.badge) { %>
+                  &nbsp;<span class="badge <%= badgeClass[item.badge] || 'badge-orange' %>"><%= item.badge %></span>
+                <% } %>
+              </div>
+              <div class="side-card-desc"><%= item.description %></div>
+            </div>
+            <div class="side-card-right">
+              <span class="card-price">$<%= item.price.toFixed(2) %></span>
+              <button class="btn btn-primary" onclick="addToCart(JSON.parse(this.dataset.item))" data-item="<%= JSON.stringify(item) %>">
+                + Add
+              </button>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /#menu -->
+
+<!-- ════════════════════════════════════════════════════ CTA ══ -->
+<section class="cta-section">
+  <h2>Ready to Order?</h2>
+  <p>Your cart is waiting — checkout takes under 60 seconds with PayPal.</p>
+  <a href="/cart" class="btn btn-primary btn-lg">Go to Cart →</a>
+</section>
+
+<!-- ══════════════════════════════════════════════ PAGE FOOTER ══ -->
+<footer class="page-footer">
+  © 2025 <span>BiteBox</span> — Learning Project · Powered by PayPal Sandbox
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ── Cart helpers ──────────────────────────────────────────────────────────── */
+  function getCart() {
+    return JSON.parse(localStorage.getItem('cart') || '[]');
+  }
+
+  function saveCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
+  }
+
+  function addToCart(item) {
+    const cart = getCart();
+    const existing = cart.find(i => i.id === item.id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ ...item, quantity: 1 });
+    }
+    saveCart(cart);
+    showToast(`✓  ${item.name} added to cart`);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  /* ── Sticky category tab active state on scroll ────────────────────────────── */
+  const tabs = document.querySelectorAll('.cat-tab');
+  const sections = document.querySelectorAll('[id^="section-"]');
+  const catNavHeight = document.getElementById('cat-nav').offsetHeight;
+  const navHeight = document.getElementById('main-nav').offsetHeight;
+
+  function setActiveTab(id) {
+    tabs.forEach(t => {
+      t.classList.toggle('active', t.dataset.target === id);
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    let current = sections[0].id.replace('section-', '');
+    sections.forEach(sec => {
+      const top = sec.getBoundingClientRect().top;
+      if (top <= navHeight + catNavHeight + 40) {
+        current = sec.id.replace('section-', '');
+      }
+    });
+    setActiveTab(current);
+  });
+
+  // Click tab → smooth scroll to section
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = document.getElementById('section-' + tab.dataset.target);
+      if (target) {
+        const offset = navHeight + catNavHeight + 16;
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+
+<%- include('partials/footer') %>

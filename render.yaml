@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: food-ordering-paypal
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      # Set these manually in the Render dashboard (never put secrets in this file)
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_JS_SDK_CLIENT_ID
+        sync: false
