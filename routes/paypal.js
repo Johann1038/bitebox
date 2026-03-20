@@ -70,8 +70,9 @@ router.post('/create-order', async (req, res) => {
     // Return both IDs to the browser
     res.json({ id: paypalOrderId, ref: internalRef });
   } catch (err) {
-    console.error('[PayPal] create-order error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to create PayPal order' });
+    const detail = err.response?.data || err.message;
+    console.error('[PayPal] create-order error:', JSON.stringify(detail));
+    res.status(500).json({ error: 'Failed to create PayPal order', detail });
   }
 });
 

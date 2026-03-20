@@ -17,3 +17,5 @@ services:
         sync: false
       - key: PAYPAL_JS_SDK_CLIENT_ID
         sync: false
+      - key: WHATSAPP_NUMBER
+        sync: false
