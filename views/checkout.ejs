@@ -127,6 +127,13 @@
       updateBlocker();
     });
 
+    // ── Error helper ──────────────────────────────────────────────────────────
+    function showError(msg) {
+      const el = document.getElementById('pay-error');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
     // ── PayPal Buttons ────────────────────────────────────────────────────────
     paypal.Buttons({
 
@@ -138,6 +145,7 @@
           throw new Error('Please fill in your details first.');
         }
 
+        showError('');
         const res = await fetch('/api/paypal/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -148,7 +156,7 @@
           }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Create order failed');
+        if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
 
         sessionStorage.setItem('orderRef', data.ref);
         return data.id;
@@ -162,7 +170,7 @@
           body: JSON.stringify({ orderID: data.orderID, ref }),
         });
         const result = await res.json();
-        if (!res.ok) throw new Error(result.error || 'Capture failed');
+        if (!res.ok) throw new Error(result.error || `Capture error ${res.status}`);
 
         localStorage.removeItem('cart');
         sessionStorage.removeItem('orderRef');
@@ -173,9 +181,8 @@
 
       onError: (err) => {
         console.error('[PayPal Error]', err);
-        const errEl = document.getElementById('pay-error');
-        errEl.textContent = 'Payment error. Please try again.';
-        errEl.style.display = 'block';
+        const msg = (err && err.message) ? err.message : String(err);
+        showError('Payment failed: ' + msg);
       },
 
     }).render('#paypal-button-container');
